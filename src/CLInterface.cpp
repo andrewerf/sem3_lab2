@@ -94,6 +94,7 @@ void GameCLInterface::show_field()
             }
         }
     }
+    cout << endl;
 }
 
 

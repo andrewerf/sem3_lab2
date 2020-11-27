@@ -17,6 +17,7 @@ public:
     bool validate_move(Point p) const;
     Symbol check_winner() const;
     bool check_winner(Symbol symbol) const;
+    unsigned int max_length(Symbol symbol) const;
     unsigned int winning_length() const {return _winning_length;}
     Symbol empty_symbol() const {return _empty_symbol;}
     std::vector<Point> empty_cells() const;

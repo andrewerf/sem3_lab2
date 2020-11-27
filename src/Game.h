@@ -32,7 +32,7 @@ private:
     unsigned int _steps;
     GameInterface *_iface;
     const std::pair<Player*, Player*> _players;
-    const std::map<Player*, std::vector<Point>> _history;
+    std::map<Player*, std::vector<Point>> _history;
     Field _field;
 };
 

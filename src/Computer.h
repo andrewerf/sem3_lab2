@@ -23,6 +23,7 @@ public:
     class Node {
     public:
         Node(int _estimated, int _depth);
+        Node* go(Point move);
 
         int estimated;
         int depth;
@@ -31,15 +32,15 @@ public:
         ~Node();
     } *_root;
 
-    int maxmin_step(Field &field, bool maximizing, bool first);
+    int maxmin_step(Field &field, bool maximizing, Node *root);
 
 //    void build_tree();
 //    void build_tree(Node *parent, int thresh);
 private:
     const Symbol _symbol;
     Symbol _opposite_symbol;
-    bool _maximizing;
     const std::string _name;
+    int _max_depth;
     Game *_game;
 };
 

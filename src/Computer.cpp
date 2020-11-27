@@ -11,7 +11,8 @@ Computer::Computer(Symbol symbol):
     _symbol(symbol),
     _name("computer"),
     _game(nullptr),
-    _root(nullptr)
+    _root(nullptr),
+    _max_depth(8)
 {}
 
 
@@ -32,42 +33,42 @@ void Computer::set_game(Game *game)
     _game = game;
 
     auto players = game->players();
-
+    bool maximizing;
     if(players.first == this)
     {
-        _maximizing = true;
+        maximizing = true;
         _opposite_symbol = players.second->symbol();
     }
     else
     {
-        _maximizing = false;
+        maximizing = false;
         _opposite_symbol = players.first->symbol();
     }
 
-//    build_tree();
+    _root = new Node(0, 0);
+    Field field = _game->field();
+    maxmin_step(field, maximizing, _root);
 }
 
 
 Point Computer::move()
 {
-//    static Node* node = _root;
-//    auto opp_hist = _game->history().at(_opposite_symbol);
-
     Field field = _game->field();
+
+    for(const auto &p : _game->history())
+        if(p.first != this)
+            _root = _root->go(p.second.back());
 
     int best_val = -10000;
     Point best_move;
-    for(Point cell : field.empty_cells()){
-        field[cell.first][cell.second] = _symbol;
-        int move = maxmin_step(field, false, true);
-        field[cell.first][cell.second] = field.empty_symbol();
-
-        if(move > best_val)
+    for(auto p : _root->children){
+        if(p.second->estimated > best_val)
         {
-            best_val = move;
-            best_move = cell;
+            best_val = p.second->estimated;
+            best_move = p.first;
         }
     }
+    _root = _root->go(best_move);
 
     return best_move;
 }
@@ -79,6 +80,15 @@ Computer::Node::Node(int _estimated, int _depth):
     depth(_depth)
 {}
 
+Computer::Node* Computer::Node::go(Point move)
+{
+    Node *t = children[move];
+    children.clear();
+    delete this;
+
+    return t;
+}
+
 Computer::Node::~Node()
 {
     for(auto child : children)
@@ -87,17 +97,9 @@ Computer::Node::~Node()
 }
 
 
-int Computer::maxmin_step(Field &field, bool maximizing, bool first=false)
+int Computer::maxmin_step(Field &field, bool maximizing, Node *root)
 {
-    static int depth = 1;
-    if(first)
-        depth = 1;
-
-    std::vector<Point> empty_cells;
-    for(unsigned int i = 0; i < field.size(); ++i)
-        for(unsigned int j = 0; j < field.size(); ++j)
-            if(field[i][j] == '_')
-                empty_cells.emplace_back(i, j);
+    std::vector<Point> empty_cells = field.empty_cells();
 
     if(field.check_winner() == _symbol)
     {
@@ -114,7 +116,7 @@ int Computer::maxmin_step(Field &field, bool maximizing, bool first=false)
 
     std::function<bool(int, int)> f;
     int best_val;
-    Symbol symb = depth % 2 == 0 ? _symbol : _opposite_symbol;
+    Symbol symb = maximizing ? _symbol : _opposite_symbol;
     if(maximizing)
     {
         f = std::greater<>();
@@ -129,15 +131,16 @@ int Computer::maxmin_step(Field &field, bool maximizing, bool first=false)
     for(Point cell : empty_cells)
     {
         field[cell.first][cell.second] = symb;
-        ++depth;
-        auto val = maxmin_step(field, not maximizing);
-        --depth;
+        Node *child = new Node(0, root->depth+1);
+        root->children[cell] = child;
+        auto val = maxmin_step(field, not maximizing, child);
         field[cell.first][cell.second] = '_';
 
         if(f(val, best_val))
             best_val = val;
     }
 
+    root->estimated = best_val;
     return best_val;
 }
 

@@ -35,7 +35,7 @@ Symbol Field::check_winner() const
 }
 
 
-bool Field::check_winner(Symbol symbol) const
+unsigned int Field::max_length(Symbol symbol) const
 {
     std::vector<std::vector<std::vector<short>>> dp(
             size(),
@@ -63,13 +63,20 @@ bool Field::check_winner(Symbol symbol) const
         }
     }
 
+    unsigned int ret = 0;
     for(const auto &vx : dp)
         for(const auto &el : vx)
             for(const auto &k : el)
-                if(k >= _winning_length)
-                    return true;
+                if(k > ret)
+                    ret = k;
 
-    return false;
+    return ret;
+}
+
+
+bool Field::check_winner(Symbol symbol) const
+{
+    return max_length(symbol) >= _winning_length;
 }
 
 std::vector<Point> Field::empty_cells() const

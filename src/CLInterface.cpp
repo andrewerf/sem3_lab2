@@ -18,6 +18,30 @@ void GameCLInterface::set_game(Game *game)
 }
 
 
+GameType GameCLInterface::request_game_type()
+{
+    static const std::map<std::string, GameType> mapping = {
+            {"person-person", GameType::person_person},
+            {"person-computer", GameType::person_computer},
+            {"computer-person", GameType::computer_person},
+            {"computer-computer", GameType::computer_computer}
+    };
+
+    std::string all_types = "";
+    for(const auto &p : mapping)
+        all_types += p.first + ",";
+    all_types.pop_back();
+
+    std::string selected_type;
+    do {
+        cout << "Select game type [" << all_types << "]: ";
+        cin >> selected_type;
+    } while(not mapping.contains(selected_type));
+
+    return mapping.at(selected_type);
+}
+
+
 unsigned int GameCLInterface::request_field_size()
 {
     unsigned int size;
@@ -35,7 +59,10 @@ void GameCLInterface::startgame_message()
 
 void GameCLInterface::endgame_message(short winner_n)
 {
-    cout << "The end. Player " << winner_n << " won.\n";
+    if(winner_n < 0)
+        cout << "The end. Draw.";
+    else
+        cout << "The end. Player " << winner_n << " won.\n";
 }
 
 
@@ -47,7 +74,7 @@ void GameCLInterface::bad_step_message(short player_n)
 
 void GameCLInterface::show_field()
 {
-    auto field = _game->get_field();
+    auto field = _game->field();
     if (field.size() < 16) {
         for (size_t i = 0; i < field.size(); i++)
         {
@@ -69,6 +96,10 @@ void GameCLInterface::show_field()
     }
 }
 
+
+UserCLInterface::UserCLInterface():
+    _player(nullptr)
+{}
 
 
 void UserCLInterface::set_player(Player *player)

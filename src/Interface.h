@@ -19,6 +19,7 @@ public:
     virtual void set_game(Game *game) = 0;
 
     virtual unsigned int request_field_size() = 0;
+    virtual GameType request_game_type() = 0;
 
     virtual void startgame_message() = 0;
     virtual void bad_step_message(short player_n) = 0;

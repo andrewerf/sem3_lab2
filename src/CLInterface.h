@@ -15,6 +15,7 @@ public:
     void set_game(Game *game) override;
 
     unsigned int request_field_size() override;
+    GameType request_game_type() override;
 
     void startgame_message() override;
     void bad_step_message(short player_n) override;
@@ -28,9 +29,10 @@ private:
 
 class UserCLInterface : public UserInterface {
 public:
+    UserCLInterface();
+
     void set_player(Player *player) override;
 
-    UserCLInterface() = default;
     Point request_move() override;
     Symbol request_symbol() override;
     std::string request_name() override;

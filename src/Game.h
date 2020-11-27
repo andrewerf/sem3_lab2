@@ -5,8 +5,10 @@
 #ifndef TIC_TAC_TOE_GAME_H
 #define TIC_TAC_TOE_GAME_H
 
+#include <map>
 #include <utility>
 #include <vector>
+#include "Field.h"
 #include "Interface.h"
 #include "utilities.h"
 
@@ -18,21 +20,20 @@ class Game {
 public:
     Game(GameInterface *iface, Player *p1, Player *p2);
 
-    const Field& get_field() const;
+    const Field& field() const;
     void start();
     void step();
-    bool validate_move(Point p) const;
     short check_winner() const;
-    bool check_winner(Symbol symbol) const;
+    const std::pair<Player*, Player*>& players() const;
+    const std::map<Player*, std::vector<Point>>& history() const;
 
 private:
     bool _ended;
     unsigned int _steps;
     GameInterface *_iface;
     const std::pair<Player*, Player*> _players;
+    const std::map<Player*, std::vector<Point>> _history;
     Field _field;
-    const Symbol _empty_symbol;
-    unsigned int _winning_length;
 };
 
 

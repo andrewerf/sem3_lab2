@@ -13,22 +13,18 @@ Game::Game(GameInterface *iface, Player *p1, Player *p2):
     _iface(iface),
     _steps(0),
     _players({p1, p2}),
-    _empty_symbol('_')
+    _field(iface->request_field_size(), p1->symbol(), p2->symbol(), '_')
 {
-    iface->set_game(this);
-    unsigned int size = iface->request_field_size();
-    _field = std::vector(size, std::vector<Symbol>(size, '_'));
-    _winning_length = std::min<unsigned int>(5, size);
-
     if(p1->symbol() == p2->symbol())
         throw std::logic_error("Players symbols should not be the same");
 
+    iface->set_game(this);
     p1->set_game(this);
     p2->set_game(this);
 }
 
 
-const Field& Game::get_field() const
+const Field& Game::field() const
 {
     return _field;
 }
@@ -38,13 +34,13 @@ void Game::start()
 {
     _iface->startgame_message();
     _ended = false;
-    short winner;
+    short winner = -1;
     while(not _ended)
     {
         _iface->show_field();
         step();
         winner = check_winner();
-        if(winner >= 0)
+        if(winner >= 0 or _field.empty_cells().empty())
         {
             _ended = true;
         }
@@ -71,7 +67,7 @@ void Game::step()
 
     Point move = current_player->move();
 
-    if(validate_move(move))
+    if(_field.validate_move(move))
     {
         _field[move.first][move.second] = current_player->symbol();
         _steps++;
@@ -83,62 +79,21 @@ void Game::step()
 }
 
 
-bool Game::validate_move(Point p) const
-{
-    return p.first <= _field.size() and p.second <= _field.size() and _field[p.first][p.second] == _empty_symbol;
-}
-
-
 short Game::check_winner() const
 {
-    bool w1 = check_winner(_players.first->symbol());
-    bool w2 = check_winner(_players.second->symbol());
-
-    if(w1 and w2)
-        throw std::logic_error("Something strange happened and both players has won. Congratulations.");
-    else if(w1)
+    Symbol win_symb = _field.check_winner();
+    if(win_symb == _players.first->symbol())
         return 0;
-    else if(w2)
+    else if(win_symb == _players.second->symbol())
         return 1;
     else
         return -1;
-
 }
 
+const std::map<Player*, std::vector<Point>>& Game::history() const {
+    return _history;
+}
 
-bool Game::check_winner(Symbol symbol) const
-{
-    std::vector<std::vector<std::vector<short>>> dp(
-            _field.size(),
-            std::vector<std::vector<short>>(_field.size(), {0,0,0,0})
-    );
-
-    for(unsigned int y = 0; y < _field.size(); ++y)
-    {
-        for(unsigned int x = 0; x < _field.size(); ++x)
-        {
-            if(_field[y][x] == symbol)
-            {
-                for(unsigned short k = 0; k < 4; ++k)
-                    dp[y][x][k] = 1;
-
-                if(x > 0 and y > 0)
-                    dp[y][x][0] += dp[y-1][x-1][0];
-                if(y > 0 and x+1 < _field.size())
-                    dp[y][x][1] += dp[y-1][x+1][1];
-                if(x > 0)
-                    dp[y][x][2] += dp[y][x-1][2];
-                if(y > 0)
-                    dp[y][x][3] += dp[y-1][x][3];
-            }
-        }
-    }
-
-    for(const auto &vx : dp)
-        for(const auto &el : vx)
-            for(const auto &k : el)
-                if(k >= _winning_length)
-                    return true;
-
-    return false;
+const std::pair<Player*, Player*> &Game::players() const {
+    return _players;
 }

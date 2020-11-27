@@ -10,6 +10,13 @@
 
 using Symbol = char;
 using Point = std::pair<unsigned int, unsigned int>;
-using Field = std::vector<std::vector<Symbol>>;
+
+enum class GameType
+{
+    person_person,
+    person_computer,
+    computer_person,
+    computer_computer
+};
 
 #endif //TIC_TAC_TOE_UTILITIES_H

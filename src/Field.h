@@ -10,7 +10,7 @@
 #include "utilities.h"
 
 
-class Field : public std::vector<std::vector<Symbol>> {
+class Field {
 public:
     Field(unsigned int size, Symbol p1, Symbol p2, Symbol empty_symbol);
 
@@ -22,10 +22,19 @@ public:
     Symbol empty_symbol() const {return _empty_symbol;}
     std::vector<Point> empty_cells() const;
 
+    unsigned int size() const;
+    Symbol get(unsigned int row, unsigned int col) const;
+    Symbol get(Point p) const;
+    Symbol operator[] (Point p) const;
+    void set(unsigned int y, unsigned int x, Symbol val);
+    void set(Point p, Symbol val);
+
 private:
     unsigned int _winning_length;
     Symbol _empty_symbol;
     std::pair<Symbol, Symbol> _symbols;
+    std::vector<std::vector<Symbol>> _field;
+//    std::vector<std::vector<std::vector<short>>> _dp;
 };
 
 

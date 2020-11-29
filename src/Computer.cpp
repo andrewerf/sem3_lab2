@@ -12,7 +12,7 @@ Computer::Computer(Symbol symbol):
     _name("computer"),
     _game(nullptr),
     _root(nullptr),
-    _max_depth(8)
+    _max_depth(9)
 {}
 
 
@@ -77,7 +77,8 @@ Point Computer::move()
 
 Computer::Node::Node(int _estimated, int _depth):
     estimated(_estimated),
-    depth(_depth)
+    depth(_depth),
+    leaf(false)
 {}
 
 Computer::Node* Computer::Node::go(Point move)
@@ -103,15 +104,29 @@ int Computer::maxmin_step(Field &field, bool maximizing, Node *root)
 
     if(field.check_winner() == _symbol)
     {
+        root->estimated = 10;
+        root->leaf = true;
         return 10;
     }
     else if(field.check_winner() == _opposite_symbol)
     {
+        root->estimated = -10;
+        root->leaf = true;
         return -10;
     }
     else if(empty_cells.empty())
     {
+        root->estimated = 0;
+        root->leaf = true;
         return 0;
+    }
+    else if(root->depth >= _max_depth)
+    {
+        unsigned int this_max_length = field.max_length(_symbol);
+        unsigned int opposit_max_length = field.max_length(_opposite_symbol);
+        root->estimated = this_max_length - opposit_max_length;
+        root->leaf = true;
+        return root->estimated;
     }
 
     std::function<bool(int, int)> f;
@@ -130,14 +145,17 @@ int Computer::maxmin_step(Field &field, bool maximizing, Node *root)
 
     for(Point cell : empty_cells)
     {
-        field[cell.first][cell.second] = symb;
-        Node *child = new Node(0, root->depth+1);
-        root->children[cell] = child;
-        auto val = maxmin_step(field, not maximizing, child);
-        field[cell.first][cell.second] = '_';
+        if(root->leaf or (not root->children.contains(cell)))
+        {
+            field.set(cell.first, cell.second, symb);
+            Node *child = new Node(0, root->depth+1);
+            root->children[cell] = child;
+            auto val = maxmin_step(field, not maximizing, child);
+            field.set(cell.first, cell.second, '_');
 
-        if(f(val, best_val))
-            best_val = val;
+            if(f(val, best_val))
+                best_val = val;
+        }
     }
 
     root->estimated = best_val;

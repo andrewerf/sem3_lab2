@@ -84,7 +84,7 @@ void GameCLInterface::show_field()
                 if (k == 0)
                     cout << " ";
 
-                cout << field[i][k];
+                cout << field.get(i, k);
             }
             cout << endl;
             if (i < field.size() - 1) {

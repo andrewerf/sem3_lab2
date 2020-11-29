@@ -69,7 +69,7 @@ void Game::step()
 
     if(_field.validate_move(move))
     {
-        _field[move.first][move.second] = current_player->symbol();
+        _field.set(move, current_player->symbol());
         _history[current_player].push_back(move);
         _steps++;
     }

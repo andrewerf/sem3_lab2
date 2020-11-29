@@ -25,6 +25,7 @@ public:
         Node(int _estimated, int _depth);
         Node* go(Point move);
 
+        bool leaf;
         int estimated;
         int depth;
         std:: map<Point, Node*> children;

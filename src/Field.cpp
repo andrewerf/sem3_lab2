@@ -9,13 +9,14 @@ Field::Field(unsigned int size, Symbol p1, Symbol p2, Symbol empty_symbol):
         _winning_length(std::min<unsigned int>(size, 5)),
         _empty_symbol(empty_symbol),
         _symbols({p1, p2}),
-        vector(size, std::vector<Symbol>(size, empty_symbol))
+        _field(size, std::vector<Symbol>(size, empty_symbol))
+//        _dp(size,std::vector<std::vector<short>>(size, {0,0,0,0}))
 {}
 
 
 bool Field::validate_move(Point p) const
 {
-    return p.first <= size() and p.second <= size() and at(p.first).at(p.second) == _empty_symbol;
+    return p.first <= size() and p.second <= size() and get(p) == _empty_symbol;
 }
 
 
@@ -46,7 +47,7 @@ unsigned int Field::max_length(Symbol symbol) const
     {
         for(unsigned int x = 0; x < size(); ++x)
         {
-            if(at(y).at(x) == symbol)
+            if(get(y, x) == symbol)
             {
                 for(unsigned short k = 0; k < 4; ++k)
                     dp[y][x][k] = 1;
@@ -84,8 +85,58 @@ std::vector<Point> Field::empty_cells() const
     std::vector<Point> empty_cells;
     for(unsigned int i = 0; i < size(); ++i)
         for(unsigned int j = 0; j < size(); ++j)
-            if(at(i).at(j) == '_')
+            if(get(i, j) == '_')
                 empty_cells.emplace_back(i, j);
 
     return empty_cells;
+}
+
+Symbol Field::get(unsigned int row, unsigned int col) const
+{
+    return _field[row][col];
+}
+
+void Field::set(unsigned int y, unsigned int x, Symbol val)
+{
+    _field[y][x] = val;
+
+/// I believe it's possible to implement _dp such that set() is O(n) and max_length() is O(n)
+//    for(unsigned short k = 0; k < 4; ++k)
+//        _dp[y][x][k] = 1;
+//    if(x > 0 and y > 0)
+//        _dp[y][x][0] += _dp[y-1][x-1][0];
+//    if(y > 0 and x+1 < size())
+//        _dp[y][x][1] += _dp[y-1][x+1][1];
+//    if(x > 0)
+//        _dp[y][x][2] += _dp[y][x-1][2];
+//    if(y > 0)
+//        _dp[y][x][3] += _dp[y-1][x][3];
+//
+//    long int nx = x, ny = y;
+//    while(++nx < size() and ++ny < size())
+//        _dp[ny][nx][0] = _dp[nx-1][ny-1][0] + 1;
+//
+//    nx = x, ny = y;
+//    while(--nx >= 0 and ++ny < size())
+//        _dp[ny][nx] = _dp[ny-1][nx+1]
+}
+
+unsigned int Field::size() const
+{
+    return _field.size();
+}
+
+Symbol Field::get(Point p) const
+{
+    return get(p.first, p.second);
+}
+
+Symbol Field::operator[](Point p) const
+{
+    return get(p);
+}
+
+void Field::set(Point p, Symbol val)
+{
+    set(p.first, p.second, val);
 }

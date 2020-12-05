@@ -11,8 +11,7 @@ Computer::Computer(Symbol symbol):
     _symbol(symbol),
     _name("computer"),
     _game(nullptr),
-    _root(nullptr),
-    _max_depth(9)
+    _max_depth(8)
 {}
 
 
@@ -45,88 +44,78 @@ void Computer::set_game(Game *game)
         _opposite_symbol = players.first->symbol();
     }
 
-    _root = new Node(0, 0);
-    Field field = _game->field();
-    maxmin_step(field, maximizing, _root);
 }
 
 
 Point Computer::move()
 {
     Field field = _game->field();
+    return find_best_move_mt(field);
+}
 
-    for(const auto &p : _game->history())
-        if(p.first != this)
-            _root = _root->go(p.second.back());
 
+Point Computer::find_best_move_mt(Field &field)
+{
+    std::vector<std::thread> threads;
+    auto possible_moves = field.sorted_empty_cells(8);
+    std::mutex best_mutex;
     int best_val = -10000;
     Point best_move;
-    for(auto p : _root->children){
-        if(p.second->estimated > best_val)
-        {
-            best_val = p.second->estimated;
-            best_move = p.first;
-        }
+    int alpha = -10000, beta = 10000;
+    threads.reserve(possible_moves.size());
+    _running = true;
+
+    for(auto p : possible_moves)
+    {
+        threads.emplace_back(std::thread([this, &field, &alpha, &beta, &best_val, &best_mutex, &best_move, p]{
+            Field _field = field;
+            _field.set(p, _symbol);
+            auto val = maxmin_step(_field, false, alpha, beta, 0);
+
+            auto lock = std::lock_guard(best_mutex);
+            if(val > best_val)
+            {
+                best_val = val;
+                best_move = p;
+            }
+            if(best_val > alpha)
+                alpha = best_val;
+            if(alpha > beta)
+                _running.store(false);
+        }));
     }
-    _root = _root->go(best_move);
+
+    for(auto &t : threads)
+        t.join();
 
     return best_move;
 }
 
 
-
-Computer::Node::Node(int _estimated, int _depth):
-    estimated(_estimated),
-    depth(_depth),
-    leaf(false)
-{}
-
-Computer::Node* Computer::Node::go(Point move)
+int Computer::maxmin_step(Field &field, bool maximizing, int alpha, int beta, unsigned int depth)
 {
-    Node *t = children[move];
-    children.clear();
-    delete this;
+//    if(_cache.contains(field))
+//        return _cache.at(field);
 
-    return t;
-}
-
-Computer::Node::~Node()
-{
-    for(auto child : children)
-        delete child.second;
-    children.clear();
-}
-
-
-int Computer::maxmin_step(Field &field, bool maximizing, Node *root)
-{
-    std::vector<Point> empty_cells = field.empty_cells();
+    std::vector<Point> empty_cells = field.sorted_empty_cells(6);
 
     if(field.check_winner() == _symbol)
     {
-        root->estimated = 10;
-        root->leaf = true;
-        return 10;
+        return 100;
     }
     else if(field.check_winner() == _opposite_symbol)
     {
-        root->estimated = -10;
-        root->leaf = true;
-        return -10;
+        return -100;
     }
     else if(empty_cells.empty())
     {
-        root->estimated = 0;
-        root->leaf = true;
         return 0;
     }
-    else if(root->depth >= _max_depth)
+    else if(depth >= _max_depth or not _running)
     {
         unsigned int this_max_length = field.max_length(_symbol);
         unsigned int opposit_max_length = field.max_length(_opposite_symbol);
-        root->estimated = this_max_length - opposit_max_length;
-        root->leaf = true;
-        return root->estimated;
+        return this_max_length*this_max_length - opposit_max_length*opposit_max_length - depth;
     }
 
     std::function<bool(int, int)> f;
@@ -145,20 +134,22 @@ int Computer::maxmin_step(Field &field, bool maximizing, Node *root)
 
     for(Point cell : empty_cells)
     {
-        if(root->leaf or (not root->children.contains(cell)))
-        {
-            field.set(cell.first, cell.second, symb);
-            Node *child = new Node(0, root->depth+1);
-            root->children[cell] = child;
-            auto val = maxmin_step(field, not maximizing, child);
-            field.set(cell.first, cell.second, '_');
+        field.set(cell, symb);
+        auto val = maxmin_step(field, not maximizing, alpha, beta, depth+1);
+        field.set(cell, '_');
 
-            if(f(val, best_val))
-                best_val = val;
-        }
+        if(f(val, best_val))
+            best_val = val;
+        if(maximizing)
+            alpha = std::max(alpha, best_val);
+        else
+            beta = std::min(beta, best_val);
+
+        if(alpha >= beta)
+            break;
     }
 
-    root->estimated = best_val;
+//    _cache[field] = best_val;
     return best_val;
 }
 

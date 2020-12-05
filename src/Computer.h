@@ -5,6 +5,9 @@
 #ifndef TIC_TAC_TOE_COMPUTER_H
 #define TIC_TAC_TOE_COMPUTER_H
 
+#include <thread>
+#include <future>
+#include <unordered_map>
 #include <map>
 #include "Field.h"
 #include "Player.h"
@@ -19,30 +22,17 @@ public:
     void set_game(Game *game) override;
     Point move() override;
 
+    int maxmin_step(Field &field, bool maximizing, int alpha, int beta, unsigned int depth);
 
-    class Node {
-    public:
-        Node(int _estimated, int _depth);
-        Node* go(Point move);
-
-        bool leaf;
-        int estimated;
-        int depth;
-        std:: map<Point, Node*> children;
-
-        ~Node();
-    } *_root;
-
-    int maxmin_step(Field &field, bool maximizing, Node *root);
-
-//    void build_tree();
-//    void build_tree(Node *parent, int thresh);
+    Point find_best_move_mt(Field &field);
 private:
     const Symbol _symbol;
     Symbol _opposite_symbol;
     const std::string _name;
     int _max_depth;
     Game *_game;
+    std::atomic<bool> _running;
+    std::unordered_map<Field, int> _cache;
 };
 
 

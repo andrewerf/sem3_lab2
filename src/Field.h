@@ -5,6 +5,7 @@
 #ifndef TIC_TAC_TOE_FIELD_H
 #define TIC_TAC_TOE_FIELD_H
 
+#include <functional>
 #include <stdexcept>
 #include <vector>
 #include "utilities.h"
@@ -29,6 +30,10 @@ public:
     void set(unsigned int y, unsigned int x, Symbol val);
     void set(Point p, Symbol val);
 
+    std::vector<Point> sorted_empty_cells(int max_n=-1) const;
+    bool operator== (const Field &field) const;
+
+    size_t hash() const;
 private:
     unsigned int _winning_length;
     Symbol _empty_symbol;
@@ -36,6 +41,19 @@ private:
     std::vector<std::vector<Symbol>> _field;
 //    std::vector<std::vector<std::vector<short>>> _dp;
 };
+
+
+namespace std
+{
+    template<>
+    struct hash<Field>
+    {
+        std::size_t operator() (const Field &field) const
+        {
+            return field.hash();
+        }
+    };
+}
 
 
 #endif //TIC_TAC_TOE_FIELD_H

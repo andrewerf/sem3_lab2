@@ -2,6 +2,7 @@
 // Created by andrew on 11/26/20.
 //
 
+#include <cmath>
 #include "Field.h"
 
 
@@ -85,7 +86,7 @@ std::vector<Point> Field::empty_cells() const
     std::vector<Point> empty_cells;
     for(unsigned int i = 0; i < size(); ++i)
         for(unsigned int j = 0; j < size(); ++j)
-            if(get(i, j) == '_')
+            if(get(i, j) == _empty_symbol)
                 empty_cells.emplace_back(i, j);
 
     return empty_cells;
@@ -139,4 +140,83 @@ Symbol Field::operator[](Point p) const
 void Field::set(Point p, Symbol val)
 {
     set(p.first, p.second, val);
+}
+
+std::vector<Point> Field::sorted_empty_cells(int max_n) const
+{
+    long int av_x = 0, av_y = 0, n = 0;
+    for (unsigned int y = 0; y < size(); ++y)
+    {
+        for (unsigned int x = 0; x < size(); ++x)
+        {
+            if(get(y, x) != _empty_symbol)
+            {
+                av_x += x;
+                av_y += y;
+                ++n;
+            }
+        }
+    }
+
+    if(n == 0)
+    {
+        av_x = av_y = 0;
+    }
+    else
+    {
+        av_x = floor(av_x / n);
+        av_y = floor(av_y / n);
+    }
+
+    std::vector<Point> ret;
+
+    auto cond = [this](long int y, long int x)
+    {
+        return x >= 0 and x < size() and y >= 0 and y < size() and _field[y][x] == _empty_symbol;
+    };
+
+    if(cond(av_y, av_x))
+        ret.emplace_back(std::pair(av_y, av_x));
+    for(long int r = 1; r <= std::max({size() - av_x + 1, size() - av_y + 1, av_x, av_y}) and (max_n < 0 or ret.size() < max_n); ++r)
+    {
+        long int y = av_y + r, x = av_x;
+        for(; y > av_y; --y, ++x)
+            if(cond(y, x))
+                ret.emplace_back(std::pair(y, x));
+
+        for(; y > av_y - r; --y, --x)
+            if(cond(y, x))
+                ret.emplace_back(std::pair(y, x));
+
+        for(; y < av_y; ++y, --x)
+            if(cond(y, x))
+                ret.emplace_back(std::pair(y, x));
+
+        for(; y < av_y + r; ++y, ++x)
+            if(cond(y, x))
+                ret.emplace_back(std::pair(y, x));
+    }
+
+    return ret;
+}
+
+bool Field::operator==(const Field &field) const
+{
+    return _field == field._field;
+}
+
+size_t Field::hash() const
+{
+    unsigned long long rep = 0;
+    for(unsigned int y = 0; y < size(); ++y)
+        for(unsigned int x = 0; x < size(); ++x)
+            if(get(y, x) == empty_symbol())
+                rep *= 3;
+            else if(get(y, x) == _symbols.first)
+                rep = rep*3 + 1;
+            else if(get(y, x) == _symbols.second)
+                rep = rep*3 + 2;
+
+    std::hash<unsigned long long> hs;
+    return hs(rep);
 }

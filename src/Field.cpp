@@ -7,7 +7,7 @@
 
 
 Field::Field(unsigned int size, Symbol p1, Symbol p2, Symbol empty_symbol):
-        _winning_length(std::min<unsigned int>(size, 5)),
+        _winning_length(std::min<unsigned int>(size, 4)),
         _empty_symbol(empty_symbol),
         _symbols({p1, p2}),
         _field(size, std::vector<Symbol>(size, empty_symbol))
@@ -142,7 +142,7 @@ void Field::set(Point p, Symbol val)
     set(p.first, p.second, val);
 }
 
-std::vector<Point> Field::sorted_empty_cells(int max_n) const
+std::vector<Point> Field::circle_empty_cells(int max_n) const
 {
     long int av_x = 0, av_y = 0, n = 0;
     for (unsigned int y = 0; y < size(); ++y)
@@ -177,28 +177,63 @@ std::vector<Point> Field::sorted_empty_cells(int max_n) const
 
     if(cond(av_y, av_x))
         ret.emplace_back(std::pair(av_y, av_x));
-    for(long int r = 1; r <= std::max({size() - av_x + 1, size() - av_y + 1, av_x, av_y}) and (max_n < 0 or ret.size() < max_n); ++r)
+    for(long int r = 1; r <= size() and (max_n < 0 or ret.size() < max_n); ++r)
     {
-        long int y = av_y + r, x = av_x;
-        for(; y > av_y; --y, ++x)
+        long int y = av_y + r, x = av_x + r;
+        for(; y > av_y - r; --y)
             if(cond(y, x))
                 ret.emplace_back(std::pair(y, x));
 
-        for(; y > av_y - r; --y, --x)
+        for(; x > av_x - r; --x)
             if(cond(y, x))
                 ret.emplace_back(std::pair(y, x));
 
-        for(; y < av_y; ++y, --x)
+        for(; y < av_y + r; ++y)
             if(cond(y, x))
                 ret.emplace_back(std::pair(y, x));
 
-        for(; y < av_y + r; ++y, ++x)
+        for(; x < av_x + r; ++x)
             if(cond(y, x))
                 ret.emplace_back(std::pair(y, x));
     }
 
     return ret;
 }
+
+
+std::vector<Point> Field::empty_cells_roi(int max_r) const
+{
+    if(max_r < 0)
+        return empty_cells();
+
+    int min_x = 10000, min_y = 10000, max_x = -10000, max_y = -10000;
+
+    for(int y = 0; y < size(); ++y)
+    {
+        for(int x = 0; x < size(); ++x)
+        {
+            if(_field[y][x] != _empty_symbol) {
+                min_x = std::min(min_x, x);
+                max_x = std::max(max_x, x);
+                min_y = std::min(min_y, y);
+                max_y = std::max(max_y, y);
+            }
+        }
+    }
+
+    std::vector<Point> ret;
+    for(int y = min_y - max_r; y <= max_y + max_r; ++y)
+    {
+        for(int x = min_x - max_r; x <= max_x + max_r; ++x)
+        {
+            if(y >= 0 and x >= 0 and y < size() and x < size() and _field[y][x] == _empty_symbol)
+                ret.emplace_back(y, x);
+        }
+    }
+
+    return ret;
+}
+
 
 bool Field::operator==(const Field &field) const
 {

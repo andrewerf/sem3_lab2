@@ -30,7 +30,8 @@ public:
     void set(unsigned int y, unsigned int x, Symbol val);
     void set(Point p, Symbol val);
 
-    std::vector<Point> sorted_empty_cells(int max_n=-1) const;
+    std::vector<Point> circle_empty_cells(int max_n=-1) const;
+    std::vector<Point> empty_cells_roi(int max_r=-1) const;
     bool operator== (const Field &field) const;
 
     size_t hash() const;

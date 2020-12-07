@@ -22,7 +22,8 @@ public:
     void set_game(Game *game) override;
     Point move() override;
 
-    int maxmin_step(Field &field, bool maximizing, int alpha, int beta, unsigned int depth);
+    int maxmin_step(Field &field, bool maximizing, int alpha, int beta, unsigned int depth, unsigned int max_depth,
+                    int breadth);
 
     Point find_best_move_mt(Field &field);
 private:
@@ -33,6 +34,7 @@ private:
     Game *_game;
     std::atomic<bool> _running;
     std::unordered_map<Field, int> _cache;
+    std::mutex _cache_mutex;
 };
 
 

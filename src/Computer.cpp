@@ -47,7 +47,7 @@ void Computer::set_game(Game *game)
     if(game->field().size() == 3)
         _max_depth = 11;
     else
-        _max_depth = 7;
+        _max_depth = 5;
 
 }
 
@@ -85,7 +85,7 @@ Point Computer::find_best_move_mt(Field &field)
     printf("Max depth is: %d\n", _max_depth);
 
 //    auto possible_moves = all_empty_cells.size() == field.size() * field.size() ? field.circle_empty_cells(10) : field.empty_cells_roi(2);
-    auto possible_moves = field.circle_empty_cells(20);
+    auto possible_moves = field.empty_cells_roi(2);
     std::mutex best_mutex;
     int best_val = -10000;
     Point best_move;
@@ -125,7 +125,7 @@ Computer::maxmin_step(Field &field, bool maximizing, int alpha, int beta, unsign
     if(_cache.contains(field))
         return _cache.at(field);
 
-    std::vector<Point> empty_cells = field.circle_empty_cells(20);
+    std::vector<Point> empty_cells = field.empty_cells_roi(1);
 
     if(field.check_winner() == _symbol)
     {

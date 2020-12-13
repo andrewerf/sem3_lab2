@@ -9,10 +9,10 @@
 
 int main()
 {
-    std::string iface_type;
+    std::string iface_type = "cli";
     InterfaceFactory *factory;
-    std::cout << "Select interface [cli]: ";
-    std::cin >> iface_type;
+//    std::cout << "Select interface [cli]: ";
+//    std::cin >> iface_type;
 
     if(iface_type == "cli")
         factory = new CLInterfaceFactory();

@@ -242,7 +242,7 @@ bool Field::operator==(const Field &field) const
 
 size_t Field::hash() const
 {
-    unsigned long long rep = 0;
+    unsigned long long rep = 1;
     for(unsigned int y = 0; y < size(); ++y)
         for(unsigned int x = 0; x < size(); ++x)
             if(get(y, x) == empty_symbol())

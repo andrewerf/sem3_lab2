@@ -80,8 +80,16 @@ int find_max_depth(long double n, long double N=9)
 Point Computer::find_best_move_mt(Field &field)
 {
     std::vector<std::thread> threads;
-//    auto all_empty_cells = field.empty_cells();
+    auto all_empty_cells = field.empty_cells();
 //    _max_depth = find_max_depth(all_empty_cells.size());
+    if(all_empty_cells.size() <= 9)
+        _max_depth = 10;
+    else if(all_empty_cells.size() <= 16)
+        _max_depth = 7;
+    else if(all_empty_cells.size() <= 36)
+        _max_depth = 6;
+    else if(all_empty_cells.size() <= 49)
+        _max_depth = 4;
     printf("Max depth is: %d\n", _max_depth);
 
 //    auto possible_moves = all_empty_cells.size() == field.size() * field.size() ? field.circle_empty_cells(10) : field.empty_cells_roi(2);
@@ -122,8 +130,8 @@ int
 Computer::maxmin_step(Field &field, bool maximizing, int alpha, int beta, unsigned int depth, unsigned int max_depth,
                       int breadth)
 {
-    if(_cache.contains(field))
-        return _cache.at(field);
+//    if(_cache.contains(field))
+//        return _cache.at(field);
 
     std::vector<Point> empty_cells = field.empty_cells_roi(1);
 
@@ -184,9 +192,9 @@ Computer::maxmin_step(Field &field, bool maximizing, int alpha, int beta, unsign
             break;
     }
 
-    _cache_mutex.lock();
-    _cache[field] = best_val;
-    _cache_mutex.unlock();
+//    _cache_mutex.lock();
+//    _cache[field] = best_val;
+//    _cache_mutex.unlock();
     return best_val;
 }
 

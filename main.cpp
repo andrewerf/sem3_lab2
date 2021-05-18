@@ -35,7 +35,7 @@ int main()
     {
         auto *user_iface = factory->build_user_interface();
         player1 = new Person(user_iface);
-        if(player1->symbol() == 'X')
+        if(player1->symbol() == 'X' or player1->symbol() == 'x')
             player2 = new Computer('O');
         else
             player2 = new Computer('X');
@@ -44,7 +44,7 @@ int main()
     {
         auto *user_iface = factory->build_user_interface();
         player2 = new Person(user_iface);
-        if(player2->symbol() == 'X')
+        if(player2->symbol() == 'X' or player2->symbol() == 'x')
             player1 = new Computer('O');
         else
             player1 = new Computer('X');

@@ -2,20 +2,25 @@
 
 #include "src/CLInterface.h"
 #include "src/CLInterfaceFactory.h"
+#include "src/QtInterfaceFactory.h"
 #include "src/Game.h"
 #include "src/Person.h"
 #include "src/Computer.h"
 
 
-int main()
+int main(int argc, char** argv)
 {
-    std::string iface_type = "cli";
+    QApplication app(argc, argv);
+
+    std::string iface_type = "qt";
     InterfaceFactory *factory;
 //    std::cout << "Select interface [cli]: ";
 //    std::cin >> iface_type;
 
     if(iface_type == "cli")
         factory = new CLInterfaceFactory();
+    else if(iface_type == "qt")
+        factory = new QtInterfaceFactory();
     else
         throw std::logic_error("Unknown interface");
 
@@ -55,6 +60,11 @@ int main()
         player2 = new Computer('O');
     }
 
-    auto *game = new Game(game_iface, player1, player2);
-    game->start();
+    std::thread thrd([&]{
+        auto *game = new Game(game_iface, player1, player2);
+        game->start();
+    });
+    thrd.detach();
+
+    return app.exec();
 }
